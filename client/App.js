@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Text, Button } from 'react-native';
 import Login from "./components/Login";
-import Profile from "./components/FillProfile";
+import Profile from "./components/Fill";
 
 import Register from './components/Register'
 import { NavigationContainer } from '@react-navigation/native';
@@ -52,7 +52,7 @@ function MyDrawer() {
       useLegacyImplementation
       drawerContent={(props) => <CustomDrawerContent {...props} />}
     >
-      <Drawer.Screen name="Profile" component={UpdateInfoDrawer} />
+      <Drawer.Screen name="Edit Profile" component={UpdateInfoDrawer} />
 
     </Drawer.Navigator>
   );
@@ -61,12 +61,11 @@ function MyDrawer() {
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
+      <Stack.Navigator initialRouteName="Register">
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Register" component={Register} />
-        <Stack.Screen name="Profile" component={Profile}/>
       <Stack.Screen
-      name="Update"
+      name="Edit Profile"
       component={MyDrawer}
       options={{ headerShown: false }}
     />
