@@ -16,14 +16,11 @@ import CustomInput from './CustomInput';
 import { useNavigation } from '@react-navigation/core';
 import CustomButton from './CustomButton';
 export default LoginScreen = (props,{navigation}) => {
-  const [username, setUserName] = useState('');
-  const [password, setUserPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errortext, setErrortext] = useState('');
   const { control, handleSubmit } = useForm();
-  const passwordInputRef = createRef();
   const onRegisterPressed = async (data)  => {
-   console.log(data);
+    const {username, password} = data;
+    console.log(username)
+        props.navigation.navigate('Edit Profile');
     fetch('http://localhost:3000/api/user/login', {
       method: 'POST',
       headers: {
@@ -37,21 +34,19 @@ export default LoginScreen = (props,{navigation}) => {
     })
       .then((response) => response.json())
       .then((responseJson) => {
-        setLoading(false);
         console.log(responseJson);
         if (responseJson.status === 'success') {
           console.log('success');
-          props.navigation.navigate('Home');
+          props.navigation.navigate('Edit Profile');
         } else {
           console.log ('fail');
           console.log('Please check your email id or password');
         }
       })
       .catch((error) => {
-        setLoading(false);
         console.error(error);
       });
-    props.navigation.navigate('Home');
+
  
   };
   return(
@@ -86,8 +81,7 @@ export default LoginScreen = (props,{navigation}) => {
         <CustomButton
           text="Login"
           onPress={
-            (() => props.navigation.navigate('UpdateInfo'),
-            handleSubmit(onRegisterPressed))
+            (handleSubmit(onRegisterPressed))
           } 
        
         />
