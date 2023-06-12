@@ -5,50 +5,45 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
 } from 'react-native';
 import CustomInput from './CustomInput';
-import { useNavigation } from '@react-navigation/core';
 import CustomButton from './CustomButton';
 
 import { useForm } from 'react-hook-form';
 
 export default function SignUpScreen(props,{navigation}) {
+
   const { control, handleSubmit, watch } = useForm();
   const pwd = watch('password');
-   const [loading, setLoading] = useState(false);
-  const onRegisterPressed = async (data) => {
-    console.log(data);
-    fetch('http://localhost:3000/api/user/register', {
+  const onRegisterPressed = async (data)  => {
+    const {username, password} = data;
+    console.log(data)
+        props.navigation.navigate('Edit Profile');
+    fetch('http://localhost:3000/api/user/login', {
       method: 'POST',
       headers: {
        'Content-Type': 'application/json'
      },
-     body:JSON.stringify({
- 
-     }),
+     body:JSON.stringify(data),
         
     })
       .then((response) => response.json())
       .then((responseJson) => {
-        setLoading(false);
         console.log(responseJson);
         if (responseJson.status === 'success') {
-             console.log('success');
-          props.navigation.navigate('Profile');
+          console.log('success');
+          props.navigation.navigate('Edit Profile');
         } else {
           console.log ('fail');
           console.log('Please check your email id or password');
         }
       })
       .catch((error) => {
-        setLoading(false);
         console.error(error);
       });
-    console.log(data, 'data');
-    props.navigation.navigate('Profile');
-  };
 
+ 
+  };
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.root}>
@@ -99,8 +94,7 @@ export default function SignUpScreen(props,{navigation}) {
         <CustomButton
           text="Register"
           onPress={
-            (() => props.navigation.navigate('UpdateInfo'),
-            handleSubmit(onRegisterPressed))
+            (handleSubmit(onRegisterPressed))
           }
         />
         <TouchableOpacity style={styles.logIn}>
