@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { View, Text, Button } from 'react-native';
 import Login from "./components/Login";
-import Profile from "./components/Fill";
+import Profile from "./components/FillProfile";
 
 import Register from './components/Register'
 import { NavigationContainer } from '@react-navigation/native';
