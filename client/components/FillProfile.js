@@ -1,194 +1,284 @@
-import React, { useState, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
+import { useState } from 'react';
+import { Controller } from 'react-hook-form';
+import { Alert} from 'react-native'
+import DropDownPicker from 'react-native-dropdown-picker';
 import {
   StyleSheet,
   View,
-  TextInput,
-  Button,
+  KeyboardAvoidingView,
+  Modal,
   Text,
   Platform,
+  ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import DropDownPicker from 'react-native-dropdown-picker';
-import { useForm, Controller } from 'react-hook-form';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import CustomInput from './CustomInput';
+import CustomButton from './CustomButton';
+import { getFormatedDate } from 'react-native-modern-datepicker';
+import DatePicker from 'react-native-modern-datepicker';
 
-const Sign = () => {
+export default LoginScreen = (props) => {
+  const EMAIL_REGEX =
+    /^[a-zA-Z0-9.!#$%&’*+/=?^_{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
+  const { control, handleSubmit } = useForm();
+  const [openBirthday, setOpenBirthday] = useState(false);
+  const today = new Date();
+  const startDate = getFormatedDate(
+    today.setDate(today.getDate() + 1),
+    'DD-MM-YYYY'
+  );
+  const [openStartDatePicker, setOpenStartDatePicker] = useState(false);
+  const [selectedStartDate, setSelectedStartDate] = useState('');
+  const [startedDate, setStartedDate] = useState('');
   const [genderOpen, setGenderOpen] = useState(false);
   const [genderValue, setGenderValue] = useState(null);
-  const [date, setDate] = useState(new Date());
-  const [mode, setMode] = useState('date');
-  const [show, setShow] = useState(false);
-  const [text, setText] = useState('Empty');
   const [gender, setGender] = useState([
     { label: 'Male', value: 'male' },
     { label: 'Female', value: 'female' },
   ]);
-  const showMode = (curentMode) => {
-    setShow(true);
-    setMode(curentMode);
-  };
-  const onChange = (event, selectedDate) => {
-    const currentDate = selectedDate || date;
-    setShow(false);
-    setDate(currentDate);
-    let tempDate = new Date(currentDate);
-    let fDate =
-      tempDate.getDate() +
-      (tempDate.getMonth() + 1) +
-      '/' +
-      tempDate.getFullYear();
-    setText(fDate);
-    console.log(setText);
 
-    this.setState({ date });
-    this.submit(date);
+  function handleChangeStartDate(propDate) {
+    setStartedDate(propDate);
+  }
+  const handleOnPressStartDate = () => {
+    birthday = selectedStartDate;
+    console.log(birthday);
+    setOpenStartDatePicker(!openStartDatePicker);
   };
 
-  const [loading, setLoading] = useState(false);
-  const { handleSubmit, control } = useForm();
-  const onSubmit = (data) => {
-    console.log(data, 'data');
+  const onRegisterPressed = async (data) => {
+    data.birthday = birthday;
+    if(!data.birthday){
+      alert("Please select your birthday");
+      return;
+    }
+    if(!data.gender){
+      alert("Please select your gender");
+      return;
+    }
+    console.log(data);
+    fetch('http://localhost:3000/api/user/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: username,
+        password: password,
+      }),
+    })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        console.log(responseJson);
+        if (responseJson.status === 'success') {
+          console.log('success');
+          props.navigation.navigate('Home');
+        } else {
+          console.log('fail');
+          console.log('Please check your email id or password');
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    props.navigation.navigate('Home');
   };
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Name</Text>
-      <Controller
-        name="name"
-        defaultValue=""
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            style={styles.input}
-            selectionColor={'#5188E3'}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
-      />
-
-      <Text style={styles.label}>Password</Text>
-      <Controller
-        name="password"
-        defaultValue=""
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            style={styles.input}
-            secureTextEntry={true}
-            selectionColor={'#5188E3'}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
-      />
-      <View>
-        <Text style={styles.label}>Gender</Text>
-        <Controller
-          name="gender"
-          defaultValue=""
+    <ScrollView showsVerticalScrollIndicator={false}>
+      <View style={styles.root}>
+        <Text style={styles.title}>Edit Your Profile</Text>
+        <CustomInput
+          name="name"
           control={control}
-          render={({ field: { onChange, value } }) => (
-            <View style={styles.dropdownGender}>
-              <DropDownPicker
-                style={styles.dropdown}
-                open={genderOpen}
-                value={genderValue} //genderValue
-                items={gender}
-                setOpen={setGenderOpen}
-                setValue={setGenderValue}
-                setItems={setGender}
-                placeholder="Select Gender"
-                placeholderStyle={styles.placeholderStyles}
-                onChangeValue={onChange}
-                zIndex={3000}
-                zIndexInverse={1000}
-              />
-            </View>
+          defaultValue=""
+          placeholder="Name"
+          placeholderTextColor="#8b9cb5"
+           rules={{
+            required: 'Name is required',
+            minLength: {
+              value: 3,
+              message: 'Name should be at least 4 characters long',
+            },
+            maxLength: {
+              value: 24,
+              message: 'Name should be max 45 characters long',
+            },}}
+        />
+        <CustomInput
+          name="password"
+          control={control}
+          placeholder="Password"
+          placeholderTextColor="#8b9cb5"
+          secureTextEntry
+          rules={{
+            required: 'Password is required',
+            minLength: {
+              value: 8,
+              message: 'Password should be at least 8 characters long',
+            },
+          }}
+        />
+        <CustomInput
+          name="address"
+          control={control}
+          placeholder="Address"
+          placeholderTextColor="#8b9cb5"
+          rules={{
+            required: 'Address is required',
+          }}
+        />
+
+        <CustomInput
+          name="email"
+          control={control}
+          placeholder="Email"
+          rules={{
+            required: 'Email is required',
+            pattern: { value: EMAIL_REGEX, message: 'Email is invalid' },
+          }}
+        />
+
+        <Controller
+          name="birthday"
+          control={control}
+          defaultValue=""
+          render={() => (
+            <KeyboardAvoidingView
+              behavior={Platform.OS == 'ios' ? 'padding' : ''}
+              style={{
+                width: '100%',
+              }}>
+              <View>
+                <TouchableOpacity
+                  style={styles.container}
+                  onPress={handleOnPressStartDate}>
+                  <Text style={{ color: '#8b9cb5', alignItems: 'center' }}>
+                    Birthday{' '}
+                  </Text>
+                  <Text>{selectedStartDate}</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Modal
+                animationType="slide"
+                transparent={true}
+                visible={openStartDatePicker}>
+                <View style={styles.centeredView}>
+                  <View style={styles.modalView}>
+                    <DatePicker
+                      mode="calendar"
+                      minimumDate={startDate}
+                      selected={startedDate}
+                      onDateChanged={handleChangeStartDate}
+                      onSelectedChange={(date) => setSelectedStartDate(date)}
+                      options={{
+                        backgroundColor: '#080516',
+                        textHeaderColor: '#469ab6',
+                        textDefaultColor: '#FFFFFF',
+                        selectedTextColor: '#FFF',
+                        mainColor: '#469ab6',
+                        textSecondaryColor: '#FFFFFF',
+                        borderColor: 'rgba(122, 146, 165, 0.1)',
+                      }}
+                    />
+                    <TouchableOpacity onPress={handleOnPressStartDate}>
+                      <Text style={{ color: 'white' }}>Close</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </Modal>
+            </KeyboardAvoidingView>
           )}
         />
+        <View>
+          <Controller
+            name="gender"
+            defaultValue=""
+            control={control}
+            render={({ field: { onChange, value } }) => (
+              
+                <DropDownPicker
+                  style={styles.container}
+                  open={genderOpen}
+                  value={genderValue}
+                  items={gender}
+                  setOpen={setGenderOpen}
+                  setValue={setGenderValue}
+                  setItems={setGender}
+                  placeholder="Select Gender"
+                  placeholderTextColor='#8b9cb5'
+                  placeholderStyle={styles.placeholderStyles}
+                  onChangeValue={onChange}
+                  zIndex={3000}
+                  zIndexInverse={1000}
+                />
+            
+            )}
+          />
+        </View>
+        <CustomButton
+          text="Save"
+          onPress={
+            (() => props.navigation.navigate('UpdateInfo'),
+            handleSubmit(onRegisterPressed))
+          }
+        />
       </View>
-      <Text style={styles.label}>Email Address</Text>
-      <Controller
-        name="email"
-        defaultValue=""
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            style={styles.input}
-            selectionColor={'#5188E3'}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
-      />
-
-      <Text style={styles.label}>Birthday</Text>
-      <Controller
-        name="birthday"
-        defaultValue=""
-        control={control}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            style={styles.input}
-            selectionColor={'#5188E3'}
-            onChangeText={onChange}
-            value={value}
-          />
-        )}
-      />
-
-      <TouchableOpacity onPress={handleSubmit(onSubmit)}>
-        <Text style={styles.save}>Save</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  root: {
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    padding: 20,
+  },
   container: {
-    flex: 1,
-        backgroundColor: "#A7C7E7",
-  },
-  input: {
-    borderStyle: 'solid',
-    borderColor: '#B7B7B7',
-    backgroundColor: "#ffffff",
-    borderRadius: 7,
-    borderWidth: 1,
-    fontSize: 15,
+    backgroundColor: 'white',
+    width: '100%',
+    flexDirection: 'row',
     height: 50,
-    marginHorizontal: 10,
-    paddingStart: 10,
-    marginBottom: 15,
-  },
-  label: {
-    marginBottom: 7,
-    marginTop:10,
-    marginStart: 10,
-  },
-  placeholderStyles: {
-    color: 'grey',
-  },
-  dropdownGender: {
-    marginHorizontal: 10,
-    width: '50%',
-    marginBottom: 15,
+    marginTop: 20,
+    marginLeft: -5,
+    margin: 10,
+    alignItems: 'center',
+    borderColor: '#E5E4E2',
+    borderWidth: 1,
+    paddingHorizontal: 20,
+    marginVertical: 5,
   },
 
-  dropdown: {
-    borderColor: '#B7B7B7',
-    height: 50,
-  },
-  save: {
-    backgroundColor: "#0039a6",
- 
-    color: 'white',
-    textAlign: 'center',
-    marginHorizontal: 60,
-    paddingVertical: 15,
-    borderRadius: 50,
+  title: {
     marginTop: 20,
+    marginBottom: 20,
+    textAlign: 'center',
+    fontSize: 30,
+    color: '#0039a6',
+  },
+
+  centeredView: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: '#080516',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+    padding: 35,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    marginBottom: 0,
   },
 });
-
-export default Sign;
