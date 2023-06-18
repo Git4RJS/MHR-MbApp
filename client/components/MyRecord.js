@@ -8,13 +8,9 @@ import {
 } from 'react-native';
 
 import { SwipeListView } from 'react-native-swipe-list-view';
-
+let dt=[{id:'2',filename:"file1"},{id:"123",filename:"file2"}]
 export default function Basic() {
-  const [listData, setListData] = useState(
-    Array(20)
-      .fill('')
-      .map((_, i) => ({ key: `${i}`, text: `item #${i}` }))
-  );
+  const [listData, setListData] = useState(dt);
 
   const closeRow = (rowMap, rowKey) => {
     if (rowMap[rowKey]) {
@@ -25,24 +21,56 @@ export default function Basic() {
   const onRowDidOpen = (rowKey) => {
     console.log('This row opened', rowKey);
   };
-
   const renderItem = (data) => (
     <TouchableHighlight
       onPress={() => console.log('You touched me')}
       style={styles.rowFront}
       underlayColor={'#AAA'}>
       <View>
-        <Text style={styles.txt}>File name: {data.item.text}</Text>
-        <Text style={styles.txt}>ID Uploader: {data.item.text}</Text>
+        <Text style={styles.txt}>File name: {data.item.id}</Text>
+        <Text style={styles.txt}>ID Uploader: {data.item.filename}</Text>
       </View>
     </TouchableHighlight>
   );
+   const downloadFromAPI = async () => {
+    const filename = "";
+    const localhost = Platform.OS === "android" ? "10.0.2.2" : "127.0.0.1";
+    const result = await FileSystem.downloadAsync(
+      ` `,//fetch
+      FileSystem.documentDirectory + filename,
+      {
+        headers: {
+          "MyHeader": "MyValue"
+        }
+      }
+    );
+    console.log(result);
+    save(result.uri, filename, result.headers["Content-Type"]);
+  };
+
+  const save = async (uri, filename, mimetype) => {
+    if (Platform.OS === "android") {
+      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      if (permissions.granted) {
+        const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+        await FileSystem.StorageAccessFramework.createFileAsync(permissions.directoryUri, filename, mimetype)
+          .then(async (uri) => {
+            await FileSystem.writeAsStringAsync(uri, base64, { encoding: FileSystem.EncodingType.Base64 });
+          })
+          .catch(e => console.log(e));
+      } else {
+        shareAsync(uri);
+      }
+    } else {
+      shareAsync(uri);
+    }
+  };
 
   const renderHiddenItem = (data, rowMap) => (
     <View style={styles.rowBack}>
       <TouchableOpacity
         style={[styles.backRightBtn, styles.backRightBtnLeft]}
-        onPress={() => deleteRow(rowMap, data.item.key)}>
+        onPress={() => {downloadFromAPI}}>
         <Text style={styles.backTextWhite}>Download</Text>
       </TouchableOpacity>
       <TouchableOpacity
@@ -125,4 +153,3 @@ const styles = StyleSheet.create({
     right: 0,
   },
 });
-
