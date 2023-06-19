@@ -8,9 +8,17 @@ import {
 } from 'react-native';
 
 import { SwipeListView } from 'react-native-swipe-list-view';
+
 let dt=[{id:'2',filename:"file1"},{id:"123",filename:"file2"}]
+
 export default function Basic() {
-  const [listData, setListData] = useState(dt);
+  let a=dt.length;
+    const [listData, setListData] = useState(
+        Array(a)
+            .fill('')
+            .map((_, i) => ({ key: `${i}`, id: dt[i].id, filename: dt[i].filename}))
+    );
+
 
   const closeRow = (rowMap, rowKey) => {
     if (rowMap[rowKey]) {
@@ -20,20 +28,22 @@ export default function Basic() {
 
   const onRowDidOpen = (rowKey) => {
     console.log('This row opened', rowKey);
+    
   };
   const renderItem = (data) => (
     <TouchableHighlight
-      onPress={() => console.log('You touched me')}
+      onPress={() =>   console.log('You touched me')}
       style={styles.rowFront}
       underlayColor={'#AAA'}>
       <View>
-        <Text style={styles.txt}>File name: {data.item.id}</Text>
-        <Text style={styles.txt}>ID Uploader: {data.item.filename}</Text>
+        <Text style={styles.txt}>File name: {data.item.filename}</Text>
+        <Text style={styles.txt}>ID Uploader: {data.item.id}</Text>
       </View>
     </TouchableHighlight>
   );
-   const downloadFromAPI = async () => {
-    const filename = "";
+   const downloadFromAPI = async (data,rowMap) => {
+    console.log("ID at now is",data.item.id);
+    closeRow(rowMap,data.item.key);
     const localhost = Platform.OS === "android" ? "10.0.2.2" : "127.0.0.1";
     const result = await FileSystem.downloadAsync(
       ` `,//fetch
@@ -70,7 +80,8 @@ export default function Basic() {
     <View style={styles.rowBack}>
       <TouchableOpacity
         style={[styles.backRightBtn, styles.backRightBtnLeft]}
-        onPress={() => {downloadFromAPI}}>
+
+        onPress={() => downloadFromAPI(data,rowMap)}>
         <Text style={styles.backTextWhite}>Download</Text>
       </TouchableOpacity>
       <TouchableOpacity
