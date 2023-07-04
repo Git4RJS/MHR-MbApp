@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import {
   View,
   TouchableOpacity,
@@ -8,24 +7,57 @@ import {
 } from 'react-native';
 import CustomInput from './CustomInput';
 import CustomButton from './CustomButton';
-
 import { useForm } from 'react-hook-form';
+import {generatePrivate,getPublicKey} from "./GenKey";
+import Fill from './Fill'
+global.Buffer = global.Buffer || require('buffer').Buffer
+const randomBytes = require('randombytes');
+function hexStringToArrayBuffer(hexString) {
+    hexString = hexString.replace(/^0x/, '');
+    if (hexString.length % 2 != 0) {
+        console.log('WARNING: expecting an even number of characters in the hexString');
+    }
+    var bad = hexString.match(/[G-Z\s]/i);
+    if (bad) {
+        console.log('WARNING: found non-hex characters', bad);    
+    }
+    var pairs = hexString.match(/[\dA-F]{2}/gi);
+    var integers = pairs.map(function(s) {
+        return parseInt(s, 16);
+    });
+    var array = new Uint8Array(integers);
+    return Buffer.from(array.buffer);
+}
+     const privateKey =randomBytes(32);
+     const hex=privateKey.toString('hex');
+     console.log("Private Key",hex);
 
-export default function SignUpScreen(props,{navigation}) {
+var secp256k1 = require("secp256k1");
+var compressed = secp256k1.publicKeyCreate(privateKey);
+var publicKey=secp256k1.publicKeyConvert(compressed, false);
+let bufferOriginal = Buffer.from(publicKey);
+console.log("Public key",bufferOriginal.toString('hex'));
+export default function SignUpScreen(props) {
 
   const { control, handleSubmit, watch } = useForm();
-  const pwd = watch('password');
-  const onRegisterPressed = async (data)  => {
-    const {username, password} = data;
-    console.log(data)
-        props.navigation.navigate('Edit Profile');
-    fetch('http://localhost:3000/api/user/login', {
+  const pwd = watch('password1');
+  
+  const onRegisterPressed = async (data) => {
+     props.navigation.navigate("Profile",{privateKey:hex});
+
+     data.role='patient'
+    data.publicKey=publicKey
+    console.log(data);
+
+
+
+
+    /*fetch('http://localhost:3000/api/user/login', {
       method: 'POST',
       headers: {
-       'Content-Type': 'application/json'
-     },
-     body:JSON.stringify(data),
-        
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
     })
       .then((response) => response.json())
       .then((responseJson) => {
@@ -34,15 +66,13 @@ export default function SignUpScreen(props,{navigation}) {
           console.log('success');
           props.navigation.navigate('Edit Profile');
         } else {
-          console.log ('fail');
+          console.log('fail');
           console.log('Please check your email id or password');
         }
       })
       .catch((error) => {
         console.error(error);
-      });
-
- 
+      });*/
   };
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -52,8 +82,8 @@ export default function SignUpScreen(props,{navigation}) {
         <CustomInput
           name="username"
           control={control}
-          placeholder="User Name"   placeholderTextColor="#8b9cb5"
-
+          placeholder="User Name"
+          placeholderTextColor="#8b9cb5"
           rules={{
             required: 'Name is required',
             minLength: {
@@ -67,7 +97,7 @@ export default function SignUpScreen(props,{navigation}) {
           }}
         />
         <CustomInput
-          name="password"
+          name="password1"
           control={control}
           placeholder="Password"
           placeholderTextColor="#8b9cb5"
@@ -81,7 +111,7 @@ export default function SignUpScreen(props,{navigation}) {
           }}
         />
         <CustomInput
-          name="password-repeat"
+          name="password2"
           control={control}
           placeholder="Repeat Password"
           placeholderTextColor="#8b9cb5"
@@ -93,9 +123,7 @@ export default function SignUpScreen(props,{navigation}) {
 
         <CustomButton
           text="Register"
-          onPress={
-            (handleSubmit(onRegisterPressed))
-          }
+          onPress={handleSubmit(onRegisterPressed)}
         />
         <TouchableOpacity style={styles.logIn}>
           <Text
@@ -122,11 +150,7 @@ const styles = StyleSheet.create({
     fontSize: 35,
     color: '#0039a6',
   },
-  text: {
-    marginTop:20,
-    color: 'gray',
-    marginVertical: 10,
-  },
+
   links: {
     marginTop: 130,
     textAlign: 'center',
